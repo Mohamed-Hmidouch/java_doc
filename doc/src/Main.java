@@ -10,7 +10,7 @@ public class Main {
         cars.add("Mercedes");
         cars.add("Multsubtchi");
         cars.add("Renault");
-        cars.set(0,"jjj");
+        cars.add(0,"jjj");
         Collections.sort(cars);
         for(String car : cars){
             System.out.println(car);
