@@ -1,22 +1,13 @@
-import java.util.ArrayList;
-import java.util.Collections;
-
+import java.util.HashMap;
+import java.util.Map;
 public class Main {
     public static void main(String[] args) {
-        ArrayList<String> cars = new ArrayList<String>();
-        ArrayList<Integer>  années = new ArrayList<Integer>();
-        années.add(2020);
-        années.add(2012);
-        cars.add("Mercedes");
-        cars.add("Multsubtchi");
-        cars.add("Renault");
-        cars.add(0,"jjj");
-        Collections.sort(cars);
-        for(String car : cars){
-            System.out.println(car);
-        }
-        for(Integer année : années){
-            System.out.println(année);
-        }
+        Map<Integer, String> map = new HashMap<>();
+        map.put(1, "Alice");
+        map.put(2, "Bob");
+        map.put(1, "Charlie");
+
+        System.out.println("Original Map: " + map);
     }
+
 }
