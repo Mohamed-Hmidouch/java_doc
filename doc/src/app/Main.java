@@ -1,7 +1,9 @@
 package app;
 
 import app.repositories.AuthRepository;
+import app.repositories.AccountRepository;
 import app.services.AuthService;
+import app.services.AccountService;
 import app.ui.AuthMenu;
 import app.ui.LoginView;
 import app.ui.RegisterView;
@@ -11,9 +13,13 @@ import app.models.User;
 public class Main {
     public static void main(String[] args) {
 
+        // Repositories
         AuthRepository authRepository = new AuthRepository();
+        AccountRepository accountRepository = new AccountRepository();
 
+        // Services
         AuthService authService = new AuthService(authRepository);
+        AccountService accountService = new AccountService(accountRepository, authRepository);
 
         AuthMenu authMenu = new AuthMenu();
         
@@ -26,7 +32,7 @@ public class Main {
                     if(loginView.showLoginDialog()){
                         User user = loginView.getLoggedInUser();
                         authMenu.setUserLoggedIn(true);
-                        UserDashboard dashboard = new UserDashboard(user, authService);
+                        UserDashboard dashboard = new UserDashboard(user, authService, accountService);
                         dashboard.showDashboard();
                         authMenu.setUserLoggedIn(false);
                     }

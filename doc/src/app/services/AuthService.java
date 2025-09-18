@@ -49,13 +49,13 @@ public class AuthService {
             return false; // Email déjà utilisé
         }
 
-        // Créer nouvel utilisateur
         User newUser = new User(
             java.util.UUID.randomUUID(),
             fullName,
             email,
             address,
-            password
+            password,
+            new java.util.ArrayList<>()
         );
 
         // Sauvegarder dans le repository

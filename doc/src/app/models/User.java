@@ -1,6 +1,8 @@
 package app.models;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 public class User {
     private UUID id;
@@ -9,13 +11,15 @@ public class User {
     private String adress;
     private String password;
     private boolean loggedIn;
+    private List<Account> accounts;
 
-    public User(UUID id, String fullName, String email, String adress, String password) {
+    public User(UUID id, String fullName, String email, String adress, String password, List<Account> accounts) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.adress = adress;
         this.password = password;
+        this.accounts = accounts != null ? new ArrayList<>(accounts) : new ArrayList<>();
         this.loggedIn = false;
     }
 
@@ -57,6 +61,35 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public List<Account> getAccounts() {
+        return new ArrayList<>(accounts);
+    }
+
+    public void addAccount(Account account) {
+        if (account != null && !accounts.contains(account)) {
+            accounts.add(account);
+        }
+    }
+
+    public void removeAccount(Account account) {
+        accounts.remove(account);
+    }
+
+    public Account getAccountById(UUID accountId) {
+        return accounts.stream()
+                .filter(account -> account.getId().equals(accountId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public int getAccountCount() {
+        return accounts.size();
+    }
+
+    public boolean hasAccounts() {
+        return !accounts.isEmpty();
     }
 
     public boolean isLoggedIn() {
