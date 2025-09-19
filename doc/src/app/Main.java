@@ -2,6 +2,7 @@ package app;
 
 import app.repositories.AuthRepository;
 import app.repositories.AccountRepository;
+import app.repositories.TransactionRepository;
 import app.services.AuthService;
 import app.services.AccountService;
 import app.ui.AuthMenu;
@@ -16,6 +17,7 @@ public class Main {
         // Repositories
         AuthRepository authRepository = new AuthRepository();
         AccountRepository accountRepository = new AccountRepository();
+        TransactionRepository transactionRepository = new TransactionRepository();
 
         // Services
         AuthService authService = new AuthService(authRepository);
@@ -32,7 +34,7 @@ public class Main {
                     if(loginView.showLoginDialog()){
                         User user = loginView.getLoggedInUser();
                         authMenu.setUserLoggedIn(true);
-                        UserDashboard dashboard = new UserDashboard(user, authService, accountService);
+                        UserDashboard dashboard = new UserDashboard(user, authService, accountService, transactionRepository);
                         dashboard.showDashboard();
                         authMenu.setUserLoggedIn(false);
                     }

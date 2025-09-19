@@ -25,9 +25,7 @@ public class AccountRepository implements AccountInterface {
     
     @Override
     public List<Account> findByUserId(UUID userId) {
-        // Cette méthode nécessiterait une relation Account -> User
-        // Pour l'instant, on la laisse vide car User contient ses comptes
-        return new ArrayList<>();
+        return accounts.values().stream().filter(account -> account.getUserId() != null && account.getUserId().equals(userId)).collect(java.util.stream.Collectors.toList());
     }
     
     @Override

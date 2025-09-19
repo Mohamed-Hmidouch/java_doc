@@ -4,6 +4,8 @@ import app.models.User;
 import app.models.Account;
 import app.services.AuthService;
 import app.services.AccountService;
+import app.repositories.TransactionRepository;
+import app.utils.ValidationUtils;
 import java.util.Scanner;
 import java.util.UUID;
 import java.math.BigDecimal;
@@ -14,11 +16,15 @@ public class UserDashboard {
     private User currentUser;
     private AuthService authService;
     private AccountService accountService;
+    private TransactionRepository transactionRepository;
+    private TransactionView transactionView;
 
-    public UserDashboard(User user, AuthService authService, AccountService accountService) {
+    public UserDashboard(User user, AuthService authService, AccountService accountService, TransactionRepository transactionRepository) {
         this.currentUser = user;
         this.authService = authService;
         this.accountService = accountService;
+        this.transactionRepository = transactionRepository;
+        this.transactionView = new TransactionView(user, accountService, transactionRepository);
     }
     
     public boolean showDashboard() {
@@ -42,9 +48,12 @@ public class UserDashboard {
                     manageAccounts();
                     break;
                 case 5:
-                    showHelp();
+                    manageTransactions();
                     break;
                 case 6:
+                    showHelp();
+                    break;
+                case 7:
                     if (confirmLogout()) {
                         authService.logout(currentUser.getId().toString());
                         System.out.println("Déconnexion réussie!");
@@ -56,6 +65,13 @@ public class UserDashboard {
             }
         }
         return false;
+    }
+    
+    /**
+     * Gère l'accès aux transactions via TransactionView
+     */
+    private void manageTransactions() {
+        transactionView.showTransactionMenu();
     }
 
     private void displayUserInfo() {
@@ -74,16 +90,14 @@ public class UserDashboard {
         System.out.println("2. Changer mot de passe");
         System.out.println("3. Détails du compte");
         System.out.println("4. Gérer comptes bancaires");
-        System.out.println("5. Aide");
-        System.out.println("6. Se déconnecter");
+        System.out.println("5. Gestion des transactions");
+        System.out.println("6. Aide");
+        System.out.println("7. Se déconnecter");
         System.out.println("-".repeat(30));
         System.out.print("Votre choix: ");
         
-        try {
-            return Integer.parseInt(scanner.nextLine().trim());
-        } catch (NumberFormatException e) {
-            return -1;
-        }
+        String input = scanner.nextLine().trim();
+        return ValidationUtils.parseIntSafely(input, -1);
     }
 
     private void editProfile() {
@@ -112,15 +126,15 @@ public class UserDashboard {
         String currentPassword = scanner.nextLine().trim();
         
         if (!currentPassword.equals(currentUser.getPassword())) {
-            System.out.println("Mot de passe actuel incorrect!");
+            System.out.println(ValidationUtils.ErrorMessages.CURRENT_PASSWORD_INCORRECT);
             return;
         }
         
         System.out.print("Nouveau mot de passe (min 6 caractères): ");
         String newPassword = scanner.nextLine().trim();
         
-        if (newPassword.length() < 6) {
-            System.out.println("Le mot de passe doit contenir au moins 6 caractères!");
+        if (!ValidationUtils.isValidPassword(newPassword)) {
+            System.out.println(ValidationUtils.ErrorMessages.INVALID_PASSWORD);
             return;
         }
         
@@ -128,7 +142,7 @@ public class UserDashboard {
         String confirmPassword = scanner.nextLine().trim();
         
         if (!newPassword.equals(confirmPassword)) {
-            System.out.println("Les mots de passe ne correspondent pas!");
+            System.out.println(ValidationUtils.ErrorMessages.PASSWORDS_NOT_MATCH);
             return;
         }
         
@@ -171,8 +185,8 @@ public class UserDashboard {
 
     private boolean confirmLogout() {
         System.out.print("\n Êtes-vous sûr de vouloir vous déconnecter? (o/n): ");
-        String response = scanner.nextLine().trim().toLowerCase();
-        return response.equals("o") || response.equals("oui") || response.equals("y") || response.equals("yes");
+        String response = scanner.nextLine().trim();
+        return ValidationUtils.isPositiveConfirmation(response);
     }
 
     private void manageAccounts() {
@@ -182,17 +196,27 @@ public class UserDashboard {
             System.out.println("\n" + "=".repeat(40));
             System.out.println("    GESTION COMPTES BANCAIRES");
             System.out.println("=".repeat(40));
-            System.out.println("1. Voir mes comptes (" + accountService.getActiveAccountCount(currentUser.getId()) + " comptes)");
+            
+            // Recharger l'utilisateur pour avoir le compte exact
+            currentUser = authService.getLoggedInUserByEmail(currentUser.getEmail());
+            int compteCount = currentUser.getAccounts() != null ? currentUser.getAccounts().size() : 0;
+            
+            System.out.println("1. Voir mes comptes (" + compteCount + " comptes)");
             System.out.println("2. Créer nouveau compte");
             System.out.println("3. Supprimer un compte");
             System.out.println("4. Retour au menu principal");
             System.out.println("-".repeat(40));
             System.out.print("Votre choix: ");
             
-            try {
-                int choice = Integer.parseInt(scanner.nextLine().trim());
-                
-                switch (choice) {
+            String input = scanner.nextLine().trim();
+            if (!ValidationUtils.isValidInteger(input)) {
+                System.out.println(ValidationUtils.ErrorMessages.INVALID_NUMBER);
+                continue;
+            }
+            
+            int choice = Integer.parseInt(input);
+            
+            switch (choice) {
                     case 1:
                         viewAccounts();
                         break;
@@ -208,9 +232,6 @@ public class UserDashboard {
                     default:
                         System.out.println("Choix invalide! Choisissez entre 1-4");
                 }
-            } catch (NumberFormatException e) {
-                System.out.println("Veuillez entrer un nombre valide!");
-            }
         }
     }
     
@@ -232,15 +253,14 @@ public class UserDashboard {
         System.out.println("-".repeat(40));
         System.out.print("Choisissez le type de compte (1-4): ");
         
-        int choix;
-        try {
-            choix = Integer.parseInt(scanner.nextLine().trim());
-        } catch (NumberFormatException e) {
-            System.out.println("ntrée invalide! Veuillez entrer un nombre.");
+        String input = scanner.nextLine().trim();
+        if (!ValidationUtils.isValidInteger(input)) {
+            System.out.println("Entrée invalide! Veuillez entrer un nombre.");
             return;
         }
         
-        if (choix < 1 || choix > 4) {
+        int choix = Integer.parseInt(input);
+        if (!ValidationUtils.isInRange(choix, 1, 4)) {
             System.out.println("Type de compte invalide! Choisissez entre 1-4");
             return;
         }
@@ -283,7 +303,10 @@ public class UserDashboard {
         System.out.println("           MES COMPTES BANCAIRES");
         System.out.println("=".repeat(50));
         
-        if (!accountService.hasActiveAccounts(currentUser.getId())) {
+        // Recharger l'utilisateur pour avoir les données les plus récentes
+        currentUser = authService.getLoggedInUserByEmail(currentUser.getEmail());
+        
+        if (currentUser.getAccounts() == null || currentUser.getAccounts().isEmpty()) {
             System.out.println("Aucun compte bancaire trouvé.");
             System.out.println("   Créez votre premier compte dans l'option 2!");
             return;
@@ -317,14 +340,17 @@ public class UserDashboard {
         System.out.print("Entrez l'ID du compte à supprimer: ");
         String accountIdStr = scanner.nextLine().trim();
         
+        if (!ValidationUtils.isValidUUID(accountIdStr)) {
+            System.out.println(ValidationUtils.ErrorMessages.INVALID_UUID);
+            return;
+        }
+        
         try {
             UUID accountId = UUID.fromString(accountIdStr);
             
-            // Utiliser AccountService au lieu de manipulation directe
             boolean success = accountService.deleteAccount(currentUser.getId(), accountId);
             
             if (success) {
-                // Recharger l'utilisateur pour avoir les données à jour
                 currentUser = authService.getLoggedInUserByEmail(currentUser.getEmail());
                 System.out.println("Compte supprimé avec succès!");
             } else {
@@ -333,8 +359,6 @@ public class UserDashboard {
             
         } catch (IllegalStateException e) {
             System.out.println("Erreur: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.out.println("Format d'ID invalide! Utilisez un UUID valide.");
         }
     }
     

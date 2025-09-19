@@ -29,7 +29,7 @@ public class AccountService {
         
         // Créer le nouveau compte
         UUID accountId = UUID.randomUUID();
-        Account newAccount = new Account(accountId, accountType, BigDecimal.ZERO);
+        Account newAccount = new Account(accountId, userId, accountType, BigDecimal.ZERO);
         
         accountRepository.save(newAccount);
         
@@ -48,10 +48,7 @@ public class AccountService {
     }
 
     public boolean hasActiveAccounts(UUID userId){
-        if(getActiveAccountCount(userId) > 0)
-            return true;
-        else
-            return false;
+        return getActiveAccountCount(userId) > 0;
     }
     // Supprimer un compte
     public boolean deleteAccount(UUID userId, UUID accountId) {

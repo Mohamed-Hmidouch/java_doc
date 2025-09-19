@@ -5,12 +5,15 @@ import java.math.BigDecimal;
 
 public class Account {
     private UUID id;
+    private UUID userId; // ← AJOUTER CE CHAMP
     private String type;
     private BigDecimal solde;
     private String status = "active";
 
-    public Account(UUID id, String type, BigDecimal solde) {
+    // Constructeur modifié
+    public Account(UUID id, UUID userId, String type, BigDecimal solde) {
         this.id = id;
+        this.userId = userId;
         this.type = type;
         this.solde = solde != null ? solde : BigDecimal.ZERO;
         this.status = "active";
@@ -22,6 +25,14 @@ public class Account {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
     }
 
     public String getType() {
