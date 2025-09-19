@@ -37,9 +37,9 @@ public class TransactionService {
             return;
         }
         compte.setSolde(compte.getSolde().add(montant));
-        Transaction newTransaction = new Transaction(UUID.randomUUID(), accountId, java.time.LocalDateTime.now(),
+        Transaction depositTransaction = new Transaction(UUID.randomUUID(), accountId, java.time.LocalDateTime.now(),
                 montant);
-        transactionRepository.save(newTransaction);
+        transactionRepository.save(depositTransaction);
         System.out.println("Dépôt effectué avec succès.");
     }
 
@@ -62,4 +62,52 @@ public class TransactionService {
             System.out.println("=".repeat(40));
         }
     }
+
+    public void withdraw(UUID userId, UUID accountId, BigDecimal montant) {
+        if (currentUser.getAccountById(accountId) == null) {
+            System.out.println("Erreur : tu doit crée un compte aux moinx pour fair déposer");
+            return;
+        }
+        if (!"active".equals(compte.getStatus())) {
+            System.out.println("Erreur: Le compte n'est pas actif.");
+            return;
+        }
+        if(montant.compareTo(BigDecimal.ZERO) <= 0){
+            System.out.println("Erreur: Le montant doit être supérieur à 0.");
+            return;
+        }
+        compte.setSolde(compte.getSolde().subtract(montant));
+        Transaction withdrawTransaction = new Transaction(UUID.randomUUID(), accountId, java.time.LocalDateTime.now(), montant);
+        transactionRepository.save(withdrawTransaction);
+        System.out.println("Withdraw effectué avec succès.");
+    }
+
+    public  void transfer(UUID userId, UUID accountId, UUID accountIdToTransfer, BigDecimal montant){
+        if(currentUser.getAccountById(accountId) == null){
+            System.out.println("Erreur : tu doit crée un compte aux moinx pour fair déposer");
+            return;
+        }
+        if (!"active".equals(compte.getStatus())) {
+            System.out.println("Erreur: Le compte n'est pas actif.");
+            return;
+        }
+        Account compteDestinataire = currentUser.getAccountById(accountIdToTransfer);
+        if (compteDestinataire == null) {
+            System.out.println("Erreur : Le compte destinataire n'existe pas.");
+            return;
+        }
+        if (!"active".equals(compteDestinataire.getStatus())) {
+            System.out.println("Erreur: Le compte destinataire n'est pas actif.");
+            return;
+        }
+        if(montant.compareTo(BigDecimal.ZERO) <= 0){
+            System.out.println("Erreur: Le montant doit être supérieur à 0.");
+            return;
+        }
+        compteDestinataire.setSolde(compteDestinataire.getSolde().add(montant));
+        Transaction transferTransaction = new Transaction(UUID.randomUUID(), accountIdToTransfer, java.time.LocalDateTime.now(), montant);
+        transactionRepository.save(transferTransaction);
+        System.out.println("Virement effectué avec succès.");
+    }
+
 }
