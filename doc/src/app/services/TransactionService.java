@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import app.models.Account;
 import app.models.Transaction;
 import app.models.User;
+import app.repositories.AccountRepository;
 import app.repositories.TransactionRepository;
 
 public class TransactionService {
@@ -14,13 +15,15 @@ public class TransactionService {
     public User currentUser;
     public Account compte;
     public Transaction transaction;
+    public AccountRepository accountRepository;
 
     public TransactionService(TransactionRepository transactionRepository, User currentUser, Account compte,
-            Transaction transaction) {
+            Transaction transaction, AccountRepository accountRepository) {
         this.transactionRepository = transactionRepository;
         this.currentUser = currentUser;
         this.compte = compte;
         this.transaction = transaction;
+        this.accountRepository = accountRepository;
     }
 
     public void deposer(UUID userId, UUID accountId, BigDecimal montant) {
@@ -76,6 +79,13 @@ public class TransactionService {
             System.out.println("Erreur: Le montant doit être supérieur à 0.");
             return;
         }
+        
+        if (compte.getSolde().compareTo(montant) < 0) {
+            System.out.println("Erreur: Solde insuffisant pour effectuer ce retrait.");
+            System.out.println("Solde disponible: " + compte.getSolde().setScale(2) + "€");
+            return;
+        }
+        
         compte.setSolde(compte.getSolde().subtract(montant));
         Transaction withdrawTransaction = new Transaction(UUID.randomUUID(), accountId, java.time.LocalDateTime.now(), montant);
         transactionRepository.save(withdrawTransaction);
@@ -91,7 +101,13 @@ public class TransactionService {
             System.out.println("Erreur: Le compte n'est pas actif.");
             return;
         }
-        Account compteDestinataire = currentUser.getAccountById(accountIdToTransfer);
+        
+        if (accountId.equals(accountIdToTransfer)) {
+            System.out.println("Erreur: Impossible de virer vers le même compte.");
+            return;
+        }
+        
+        Account compteDestinataire = accountRepository.findById(accountIdToTransfer);
         if (compteDestinataire == null) {
             System.out.println("Erreur : Le compte destinataire n'existe pas.");
             return;
@@ -104,10 +120,25 @@ public class TransactionService {
             System.out.println("Erreur: Le montant doit être supérieur à 0.");
             return;
         }
+        
+        if (compte.getSolde().compareTo(montant) < 0) {
+            System.out.println("Erreur: Solde insuffisant pour effectuer ce virement.");
+            System.out.println("Solde disponible: " + compte.getSolde().setScale(2) + "€");
+            return;
+        }
+        
+        compte.setSolde(compte.getSolde().subtract(montant));
         compteDestinataire.setSolde(compteDestinataire.getSolde().add(montant));
-        Transaction transferTransaction = new Transaction(UUID.randomUUID(), accountIdToTransfer, java.time.LocalDateTime.now(), montant);
-        transactionRepository.save(transferTransaction);
+        
+        Transaction transferOutTransaction = new Transaction(UUID.randomUUID(), accountId, java.time.LocalDateTime.now(), montant);
+        Transaction transferInTransaction = new Transaction(UUID.randomUUID(), accountIdToTransfer, java.time.LocalDateTime.now(), montant);
+        
+        transactionRepository.save(transferOutTransaction);
+        transactionRepository.save(transferInTransaction);
+        
         System.out.println("Virement effectué avec succès.");
+        System.out.println("Nouveau solde compte source: " + compte.getSolde().setScale(2) + "€");
+        System.out.println("Nouveau solde compte destinataire: " + compteDestinataire.getSolde().setScale(2) + "€");
     }
 
 }

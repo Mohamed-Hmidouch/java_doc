@@ -15,15 +15,15 @@ public class Main {
     public static void main(String[] args) {
 
         // Repositories
-        AuthRepository authRepository = new AuthRepository();
-        AccountRepository accountRepository = new AccountRepository();
-        TransactionRepository transactionRepository = new TransactionRepository();
+        final AuthRepository authRepository = new AuthRepository();
+        final AccountRepository accountRepository = new AccountRepository();
+        final TransactionRepository transactionRepository = new TransactionRepository();
 
         // Services
-        AuthService authService = new AuthService(authRepository);
-        AccountService accountService = new AccountService(accountRepository, authRepository);
+        final AuthService authService = new AuthService(authRepository);
+        final AccountService accountService = new AccountService(accountRepository, authRepository);
 
-        AuthMenu authMenu = new AuthMenu();
+        final AuthMenu authMenu = new AuthMenu();
         
         boolean running = true;
         while(running){
@@ -34,7 +34,7 @@ public class Main {
                     if(loginView.showLoginDialog()){
                         User user = loginView.getLoggedInUser();
                         authMenu.setUserLoggedIn(true);
-                        UserDashboard dashboard = new UserDashboard(user, authService, accountService, transactionRepository);
+                        UserDashboard dashboard = new UserDashboard(user, authService, accountService, transactionRepository, accountRepository);
                         dashboard.showDashboard();
                         authMenu.setUserLoggedIn(false);
                     }

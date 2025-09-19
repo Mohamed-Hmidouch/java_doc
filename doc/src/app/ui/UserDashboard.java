@@ -5,6 +5,7 @@ import app.models.Account;
 import app.services.AuthService;
 import app.services.AccountService;
 import app.repositories.TransactionRepository;
+import app.repositories.AccountRepository;
 import app.utils.ValidationUtils;
 import java.util.Scanner;
 import java.util.UUID;
@@ -17,14 +18,16 @@ public class UserDashboard {
     private AuthService authService;
     private AccountService accountService;
     private TransactionRepository transactionRepository;
+    private AccountRepository accountRepository;
     private TransactionView transactionView;
 
-    public UserDashboard(User user, AuthService authService, AccountService accountService, TransactionRepository transactionRepository) {
+    public UserDashboard(User user, AuthService authService, AccountService accountService, TransactionRepository transactionRepository, AccountRepository accountRepository) {
         this.currentUser = user;
         this.authService = authService;
         this.accountService = accountService;
         this.transactionRepository = transactionRepository;
-        this.transactionView = new TransactionView(user, accountService, transactionRepository);
+        this.accountRepository = accountRepository;
+        this.transactionView = new TransactionView(user, accountService, transactionRepository, accountRepository);
     }
     
     public boolean showDashboard() {

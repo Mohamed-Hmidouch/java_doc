@@ -49,3 +49,6 @@ bin/
 *.zip
 *.tar.gz
 *.rar
+
+### GitHub ###
+.github/
